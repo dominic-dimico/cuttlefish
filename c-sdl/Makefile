@@ -1,18 +1,24 @@
 SRCS=$(wildcard *.c)
 OBJS=$(SRCS:.c=)
 
-FFMPEG_LIBS=    libavdevice                        \
-                libavformat                        \
-                libavfilter                        \
-                libavcodec                         \
-                libswresample                      \
-                libswscale                         \
+#FFMPEG_LIBS=    libavdevice                        \
+#                libavformat                        \
+#                libavfilter                        \
+#                libavcodec                         \
+#                libswresample                      \
+#                libswscale                         \
+#                libavutil                          \
+
+FFMPEG_LIBS=    libavcodec                         \
                 libavutil                          \
 
 all: circles spirals pendula
 
 % : %.c
-	gcc $^ -fopenmp -lm -lSDL -D_REENTRANT -I/usr/include/SDL -o $@
+	gcc $^ -fopenmp -lm -lSDL -lavcodec -D_REENTRANT -I/usr/include/SDL -o $@
+
+cube : cube.c
+	gcc -g $^ -lm -lGL -lGLU -lglut -o $@
 
 archimedes : archimedes.c recorder.o
 	gcc -g $^ -lm $(shell pkg-config --cflags --libs $(FFMPEG_LIBS)) -fopenmp -lSDL -D_REENTRANT -I/usr/include/SDL -o $@
@@ -37,6 +43,7 @@ spirals: spirals.c recorder.o
 
 recorder.o: recorder.c
 	gcc -g $^ -lm $(shell pkg-config --cflags --libs $(FFMPEG_LIBS)) -fopenmp -lSDL -D_REENTRANT -I/usr/include/SDL -c 
+
 
 clean:
 	$(RM) $(OBJS) recorder.o

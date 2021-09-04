@@ -38,7 +38,7 @@ void usage(char *progname) {
   printf(" -p    --period \n         the period of circle formation\n");
   printf(" -t    --thickness \n         the thickness of the tracers\n");
   printf(" -a    --accel \n         acceleration of the period\n");
-  printf(" -x    --tracetime \n         acceleration of the sway period\n");
+  printf(" -x    --tracetime \n         time between tracers\n");
   printf(" -f    --filename \n         name of file to save to (if recording)\n");
   printf(" -F    --framerate\n         frames per second\n");
 }
@@ -76,18 +76,20 @@ void drawCircle(SDL_Surface *screen, Uint16 x0, Uint16 y0, double r, int j)
     */
 
     Uint32 color = 0x00FFFFFF - j*0x00222222 + j*0x22000000;
-    for (t=0; t<limit; t+=unit)
-    {
-      x = x0 + r*cos(t);
-      y = y0 + r*sin(t);
-      putPixel(screen, x, y, color);
-      /*
-      *(Uint32 *) (pix
-                + (int)(y)*pitch 
-                + (int)(x)*bpp
-                ) = 0x00FFFFFF;
-                */
-    }
+    int i;
+    for (i=0; i<=2; i++)
+      for (t=0; t<limit; t+=unit)
+      {
+        x = x0 + r*cos(t) + i;
+        y = y0 + r*sin(t) + i;
+        putPixel(screen, x, y, ~color);
+        /*
+        *(Uint32 *) (pix
+                  + (int)(y)*pitch 
+                  + (int)(x)*bpp
+                  ) = 0x00FFFFFF;
+                  */
+      }
 
 }
 
@@ -116,7 +118,7 @@ void drawLine(SDL_Surface *screen, Uint16 x0, Uint16 y0, Uint16 x1, Uint16 y1, i
     //#pragma omp parallel for num_threads(4)
     for (i=0; i<r; i++) 
     { 
-      putPixel(screen, x+=dx, y+=dy, color);
+      putPixel(screen, x+=dx, y+=dy, ~color);
       /*
       *(Uint32 *) (p 
                 + (int)(y+=dy)*pitch 
@@ -129,19 +131,38 @@ void drawLine(SDL_Surface *screen, Uint16 x0, Uint16 y0, Uint16 x1, Uint16 y1, i
 
 
 
+
+void drawSpokes(SDL_Surface *screen, Uint16 x0, Uint16 y0, double r, double T, int j, int n) {
+  double val = ( T/30.0 * 2 * M_PI );
+  double valinc = n/(2*M_PI);
+  for (int k=0; k<n; k++) {
+    Uint16 x1 = x0+(r)*cos(val+valinc);
+    Uint16 y1 = y0+(r)*sin(val+valinc);
+    Uint16 x2 = x0-(r)*cos(val+valinc);
+    Uint16 y2 = y0-(r)*sin(val+valinc);
+    drawLine(screen, x1, y1, x2, y2, j);
+  }
+}
+
+
 void watchface(SDL_Surface *screen, struct options *opts, Uint16 x0, Uint16 y0, double r, double T, int j)
 {
   double val = ( T/3600.0 * 2 * M_PI );
+
+  // Draw the minute hand
   Uint16 x = x0+(r/1.5)*cos(val);
   Uint16 y = y0+(r/1.5)*sin(val);
+  drawLine(screen, x0-1, y0-1, x-1, y-1, j-1);
   drawLine(screen, x0, y0, x, y, j);
-  drawLine(screen, x0+1, y0+1, x+1, y+1, j);
-  drawLine(screen, x0-1, y0-1, x-1, y-1, j);
+  drawLine(screen, x0+1, y0+1, x+1, y+1, j+1);
+
+  // Draw the second hand
   val = ( T/60.0 * 2 * M_PI);
   x = x0+r*cos(val);
   y = y0+r*sin(val);
-  drawLine(screen, x0, y0, x, y, j);
+  drawLine(screen, x0, y0, x, y, j-1);
   drawLine(screen, x0+1, y0+1, x+1, y+1, j);
+
   //void drawLine(SDL_Surface *screen, Uint16 x0, Uint16 y0, Uint16 x1, Uint16 y1, int j)
 }
 
@@ -276,7 +297,7 @@ int main(int argc, char **argv) {
   double dt = 1.0/(double)opts->framerate;
   double T = 0, t = 0;
   double x, y;
-  double r = 20;
+  double r = 30;
   int i, j;
   int fr=0;
   int flag = 0;
@@ -299,7 +320,7 @@ int main(int argc, char **argv) {
  
 
    /*
-   if ( fr > 48*3 ) {
+   if ( fr > 48*13 ) {
        if (rand()%24 == 0) {
          dt *= -1;
        }
@@ -337,7 +358,8 @@ int main(int argc, char **argv) {
      SDL_Delay(1000.0/(float)opts->framerate);
    }
 
-   SDL_FillRect(screen, NULL, ~pixel);
+   //SDL_FillRect(screen, NULL, ~pixel);
+   SDL_FillRect(screen, NULL, pixel);
 
   } 
 

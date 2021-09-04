@@ -229,10 +229,18 @@ int main(int argc, char **argv) {
 
  printf("\n");
  bool flag = true;
- while (t<opts->seconds)
+ while (abs(t)<opts->seconds)
  {
 
-   t  += dt;
+   if (opts->inward) {
+     t  -= dt;
+     r -= (M_PI/opts->period);
+     if (r <= 0) r=dif_radius;
+   } else {
+     t  += dt;
+     r += (M_PI/opts->period);
+     if (r >= dif_radius) r=0;
+   }
 
 /*
    if (flag && t >= (9*60+10.500)) {
@@ -265,13 +273,6 @@ int main(int argc, char **argv) {
    }
 
 
-   if (opts->inward) {
-     r -= (M_PI/opts->period);
-     if (r <= 0) r=dif_radius;
-   } else {
-     r += (M_PI/opts->period);
-     if (r >= dif_radius) r=0;
-   }
  
 
    R = sqrt(opts->height*opts->height + opts->width*opts->width);
@@ -291,8 +292,11 @@ int main(int argc, char **argv) {
            x += (opts->range)    *cos(2*M_PI*t/(opts->sway)) 
              +  (opts->range/4.0)*cos(cos(2*M_PI*t/(opts->sway)*(factor+a/maxA)/factor));
          y = a*R/factor*sin(a-t*opts->period)+sideof(j);
+         x = x+x/20*cos(y+t*t);
+         y = y+y/20*sin(x+t*t);
          if (abs(x) < opts->width/2 && abs(y) < opts->height/2) {
            putPixel(screen, x+opts->width/2, y+opts->height/2, pixel);
+           saveas(frame, x+opts->width/2, y+opts->height/2, pixel);
         }
        }
 

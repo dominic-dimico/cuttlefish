@@ -283,7 +283,7 @@ int main(int argc, char **argv) {
  
    float y0, x0;
    //#pragma omp parallel for
-   for (i=1; i<opts->circles; i++)
+   for (i=0; i<opts->circles; i++)
    {
 
      //#pragma omp parallel for
