@@ -67,7 +67,7 @@ int main(int argc, char **argv) {
 
  static const struct option long_options[] = {
   {"invert", no_argument, 0, 'i'},
-  {"fps", required_argument, 0, 'n'},
+  {"fps", required_argument, 0, 'f'},
   {"height", required_argument, 0, 'h'},
   {"width", required_argument, 0, 'w'},
   {"duration", required_argument, 0, 'd'},
@@ -81,7 +81,7 @@ int main(int argc, char **argv) {
 
  int c=0;
  int optdex=0;
- while ((c = getopt_long (argc, argv, "in:h:w:d:R:r:l:p:a:", long_options, &optdex)) != -1)
+ while ((c = getopt_long (argc, argv, "if:h:w:d:R:r:l:p:a:", long_options, &optdex)) != -1)
   switch (c) {
    case 'i':
     invert = 1;
@@ -182,9 +182,12 @@ int main(int argc, char **argv) {
 
  char buffer[128];
 
+
  for (n=0; n<frames; n++) {
 
        angle = 45.0 * cos((float)n/period);
+
+
        chain.setRotation(angle);
 
        watch.setPosition(
@@ -201,7 +204,13 @@ int main(int argc, char **argv) {
        secondhand.setPosition(pos.x+radius, pos.y+radius);
        secondhand.setRotation(n*20);
 
-       sf::sleep(naptime);
+       //sf::sleep(naptime);
+       
+       sf::Transform what (
+          sin(angle),  cos(angle), -sin(angle),
+          cos(angle), -sin(angle), -cos(angle),
+          sin(angle),  cos(angle),  sin(angle)
+       );
 
        window.clear();
        window.draw(chain);
@@ -209,14 +218,12 @@ int main(int argc, char **argv) {
        window.draw(minutehand);
        window.draw(secondhand);
        window.draw(button);
-       window.display();
+       //window.display();
 
-       /*
        texture.update(window);
        screenshot = texture.copyToImage();
-       sprintf(buffer, "%08d.jpg", n);
+       sprintf(buffer, "frames/%08d.jpg", n);
        screenshot.saveToFile(buffer);
-       */
 
  }
 
